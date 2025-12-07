@@ -79,7 +79,7 @@
           <div style="margin-left:auto"><button id="generateBtn" class="btn">🪄 대사 생성하기</button></div>
         </div>
 
-        <div style="margin-top:12px;color:var(--muted);font-size:13px">입력 예시: "이리 오너라! 사료를 내놓거라!" 같은 톤을 생성합니다.</div>
+        <div style="margin-top:12px;color:var(--muted);font-size:13px">출력 예시: "이리 오너라! 사료를 내놓거라!" 같은 톤을 생성합니다.</div>
       </div>
 
       <div>
@@ -114,85 +114,16 @@
   </div>
 
   <script>
-    // 상단에 SERVER_URL을 정의하세요 (요청대로 이미 제공된 주소 사용)
-    const SERVER_URL = 'https://c7978a8f-719a-4e66-ab9d-f5fec0b7e03b-00-gxdzr6bxktq2.sisko.replit.dev/';
-    document.getElementById('serverUrl').innerText = SERVER_URL;
+    // 상단에 SERVER_URL = "https://c7978a8f-719a-4e66-ab9d-f5fec0b7e03b-00-gxdzr6bxktq2.sisko.replit.dev";
 
-    // DOM
-    const uploadArea = document.getElementById('upload');
-    const fileInput = document.getElementById('fileInput');
-    const previewBox = document.getElementById('previewBox');
-    const generateBtn = document.getElementById('generateBtn');
-    const regenerateBtn = document.getElementById('regenerateBtn');
-    const saveBtn = document.getElementById('saveBtn');
-    const resultControls = document.getElementById('resultControls');
-    const statusEl = document.getElementById('status');
+    async function register() {
+        // Collect form data
+        const payload = {
+            style: selectedStyle,
+            image: uploadedImage
+        };
 
-    let currentImageDataURL = null;
-    let lastCaption = '';
-
-    // 드래그 앤 드랍
-    ;['dragenter','dragover'].forEach(e => uploadArea.addEventListener(e, ev => {ev.preventDefault();ev.stopPropagation();uploadArea.classList.add('dragover')}));
-    ;['dragleave','drop'].forEach(e => uploadArea.addEventListener(e, ev => {ev.preventDefault();ev.stopPropagation();uploadArea.classList.remove('dragover')}));
-    uploadArea.addEventListener('drop', ev => {
-      const dt = ev.dataTransfer;
-      if(dt && dt.files && dt.files.length) handleFile(dt.files[0]);
-    });
-    uploadArea.addEventListener('click', ()=>fileInput.click());
-    fileInput.addEventListener('change', (e)=>{ if(e.target.files && e.target.files[0]) handleFile(e.target.files[0]); });
-
-    function handleFile(file){
-      if(!file.type.startsWith('image/')){ alert('이미지 파일만 업로드 가능합니다.'); return }
-      if(file.size > 10*1024*1024){ alert('최대 10MB 파일만 허용됩니다.'); return }
-      const reader = new FileReader();
-      reader.onload = ()=>{
-        currentImageDataURL = reader.result;
-        renderPreview(currentImageDataURL);
-      }
-      reader.readAsDataURL(file);
-    }
-
-    function renderPreview(dataURL){
-      previewBox.innerHTML = '';
-      const wrap = document.createElement('div'); wrap.className='bubble-wrap';
-      const img = document.createElement('img'); img.src = dataURL; img.alt='uploaded image'; img.style.maxHeight='360px';
-      wrap.appendChild(img);
-
-      // speech bubble (if caption exists)
-      if(lastCaption){
-        const bubble = document.createElement('div'); bubble.className='speech-bubble'; bubble.innerText = '"' + lastCaption + '"';
-        wrap.appendChild(bubble);
-      }
-
-      previewBox.appendChild(wrap);
-      resultControls.style.display = lastCaption ? 'flex' : 'none';
-    }
-
-    // 선택된 스타일 가져오기
-    function getSelectedStyle(){
-      const radios = document.querySelectorAll('input[name="style"]');
-      for(const r of radios) if(r.checked) return r.value;
-      return 'funny';
-    }
-
-    // 핵심: register 함수 (서버로 POST 요청을 보내는 구조 포함)
-    async function register(){
-      if(!currentImageDataURL){ alert('먼저 이미지를 업로드하세요.'); return }
-      const style = getSelectedStyle();
-
-      statusEl.innerText = '생성 중...';
-
-      // 서버로 전송할 JSON 데이터 구조
-      const payload = {
-        // image: data URL (base64), backend은 이 필드를 처리하도록 구현되어 있어야 합니다.
-        image: currentImageDataURL,
-        style: style,
-        meta: {source: 'epic-captioner-frontend', timestamp: new Date().toISOString()}
-      };
-
-      try{
-        // 반드시 method: 'POST' 와 body: JSON.stringify(...)를 포함
-        const res = await fetch(SERVER_URL + 'generate', {
+        const response = await fetch(`${SERVER_URL}/generate_caption`, {(SERVER_URL + 'generate', {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
           body: JSON.stringify(payload)
